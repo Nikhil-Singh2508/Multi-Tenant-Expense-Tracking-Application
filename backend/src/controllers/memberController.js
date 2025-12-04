@@ -3,7 +3,8 @@ const supabase = require("../services/supabaseClient");
 // Invite user to workspace (email-based)
 exports.inviteMember = async (req, res) => {
   try {
-    const { workspace_id, email, role } = req.body;
+    const { email, role } = req.body;
+    const workspace_id = req.params.workspaceId;
 
     if (!workspace_id || !email || !role)
       return res.status(400).json({ error: "Missing required fields" });

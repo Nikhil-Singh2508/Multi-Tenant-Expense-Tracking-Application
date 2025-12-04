@@ -38,18 +38,53 @@ exports.createExpense = async (req, res) => {
 exports.getExpenses = async (req, res) => {
   try {
     const workspaceId = req.params.workspaceId;
+    const userId = req.user.id;
 
-    const { data, error } = await supabase
+    const { data: expenses, error: expError } = await supabase
       .from("expenses")
-      .select("*, profiles(first_name, last_name, email)")
+      .select(`
+        *,
+        creator:profiles!expenses_created_by_fkey(first_name, last_name),
+        approver:profiles!expenses_approver_id_fkey(first_name, last_name)
+      `)
       .eq("workspace_id", workspaceId)
       .order("created_at", { ascending: false });
 
-    if (error) return res.status(500).json({ error });
+    if (expError) {
+      return res.status(500).json({ error: expError.message || expError });
+    }
 
-    res.json({ expenses: data });
+    // Fetch role in workspace
+    const { data: member, error: roleError } = await supabase
+      .from("workspace_members")
+      .select("role")
+      .eq("workspace_id", workspaceId)
+      .eq("user_id", userId)
+      .single();
+
+    if (roleError || !member) {
+      return res.status(403).json({ error: "Not part of workspace" });
+    }
+
+    const expensesWithNames = expenses.map((exp) => ({
+      ...exp,
+      created_by_name: exp.creator
+        ? `${exp.creator.first_name} ${exp.creator.last_name}`
+        : "Unknown",
+      approver_name: exp.approver
+        ? `${exp.approver.first_name} ${exp.approver.last_name}`
+        : null,
+    }));
+
+    return res.json({
+      expenses: expensesWithNames,
+      role: member.role,
+      userId,
+    });
+
   } catch (err) {
-    res.status(500).json({ error: "Server error" });
+    console.error(err);
+    return res.status(500).json({ error: "Server error" });
   }
 };
 
@@ -93,13 +128,31 @@ exports.deleteExpense = async (req, res) => {
 exports.reviewExpense = async (req, res) => {
   try {
     const expenseId = req.params.id;
-    const { action, comment } = req.body; // action: "approve" or "reject"
+    const { action, comment } = req.body;
     const approverId = req.user.id;
 
     if (!["approve", "reject"].includes(action)) {
       return res
         .status(400)
         .json({ error: "Action must be approve or reject" });
+    }
+
+    // Fetch expense so we can check who created it
+    const { data: expense, error: fetchError } = await supabase
+      .from("expenses")
+      .select("created_by")
+      .eq("id", expenseId)
+      .single();
+
+    if (fetchError || !expense) {
+      return res.status(404).json({ error: "Expense not found" });
+    }
+
+    // Prevent self approval
+    if (expense.created_by === approverId) {
+      return res
+        .status(403)
+        .json({ error: "Users cannot approve their own expenses" });
     }
 
     const newStatus = action === "approve" ? "approved" : "rejected";
@@ -118,12 +171,12 @@ exports.reviewExpense = async (req, res) => {
 
     if (error) return res.status(500).json({ error });
 
-    res.json({
+    return res.json({
       message: `Expense ${newStatus}`,
       expense: data,
     });
   } catch (err) {
     console.error("reviewExpense ERROR:", err);
-    res.status(500).json({ error: "Server error" });
+    return res.status(500).json({ error: "Server error" });
   }
 };

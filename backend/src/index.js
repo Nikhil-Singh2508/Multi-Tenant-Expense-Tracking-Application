@@ -19,8 +19,6 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// Test route
-app.use("/test", testRoutes);
 app.use("/auth", authRoutes);
 app.use("/workspaces", workspaceRoutes);
 app.use("/members", memberRoutes);

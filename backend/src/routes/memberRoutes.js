@@ -13,7 +13,7 @@ const {
 router.use(verifyToken);
 
 // Only owner + admin can invite
-router.post("/invite", requireRole(["owner", "admin"]), inviteMember);
+router.post("/:workspaceId/invite", requireRole(["owner", "admin"]), inviteMember);
 
 // Only owner/admin can update roles
 router.put("/:workspaceId/role/:userId", requireRole(["owner", "admin"]), updateMemberRole);
