@@ -3,8 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 
-// Routes (we will add these later)
-const testRoutes = require("./routes/testRoutes");
+// Routes 
 const authRoutes = require("./routes/authRoutes");
 const workspaceRoutes = require("./routes/workspaceRoutes");
 const memberRoutes = require("./routes/memberRoutes");

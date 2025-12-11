@@ -26,24 +26,33 @@ export default function PendingExpenseCard({ expense, workspaceId, refresh }: an
   };
 
   return (
-    <div className="border p-4 rounded mb-4">
-      <h3 className="font-semibold text-lg">{expense.title}</h3>
-      <p className="text-gray-600 mb-2">Amount: ₹{expense.amount}</p>
-      <p className="text-sm mb-2">Category: {expense.category}</p>
-      <p className="text-sm text-gray-500 mb-2">Submitted by: {expense.created_by_name}</p>
+    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5 mb-4">
+      <h3 className="font-semibold text-lg text-slate-900">{expense.title}</h3>
+
+      <p className="text-slate-600 mb-1">
+        <span className="font-medium">Amount:</span> ₹{expense.amount}
+      </p>
+
+      <p className="text-slate-600 mb-1">
+        <span className="font-medium">Category:</span> {expense.category}
+      </p>
+
+      <p className="text-sm text-slate-500 mb-3">
+        Submitted by: {expense.created_by_name}
+      </p>
 
       <textarea
-        className="border p-2 rounded w-full mb-2"
+        className="border border-slate-300 p-3 rounded-lg w-full mb-3 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none transition"
         placeholder="Optional comment"
         value={comment}
         onChange={(e) => setComment(e.target.value)}
       />
 
-      <div className="flex gap-2">
+      <div className="flex gap-3">
         <button
           disabled={loading}
           onClick={() => review("approve")}
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg shadow-sm transition disabled:opacity-50"
         >
           Approve
         </button>
@@ -51,7 +60,7 @@ export default function PendingExpenseCard({ expense, workspaceId, refresh }: an
         <button
           disabled={loading}
           onClick={() => review("reject")}
-          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-sm transition disabled:opacity-50"
         >
           Reject
         </button>
